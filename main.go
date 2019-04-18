@@ -20,12 +20,12 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	game := server.NewGame(100, 100, 0.1)
-	server.NewManager(game)
+	game := server.NewGame(1000, 1000, 0.1)
+	manager := server.NewManager(game)
 
 	mux := bone.New()
 
-	mux.Handle("/register", server.ConnectWorker())
+	mux.Get("/register", server.ConnectWorker(manager))
 
 	log.Println("Listening on 0.0.0.0:8080")
 	http.ListenAndServe("0.0.0.0:8080", mux)

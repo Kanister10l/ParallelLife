@@ -1,14 +1,12 @@
 package server
 
 import (
-	"strconv"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/kanister10l/ParallelLife/spinner"
 )
 
 type Manager struct {
@@ -28,12 +26,14 @@ type Worker struct {
 
 func NewManager(game *Game) *Manager {
 	manager := &Manager{}
+	manager.Game = game
 	manager.Workers = []Worker{}
 	manager.NewWorkerChannel = make(chan Worker, 100)
 	manager.GlueChannel = make(chan string, 100)
 	manager.Next = make(chan bool)
 	go manager.listenForNewWorker()
 	go manager.dispatchJobs()
+	go manager.glueBoard()
 
 	return manager
 }
@@ -48,11 +48,11 @@ func (m *Manager) listenForNewWorker() {
 }
 
 func (m *Manager) dispatchJobs() {
-	spin := spinner.Spinner{}
+	/*spin := spinner.Spinner{}
 	spin.Init("Worker warmup", 70, spinner.Circle1())
-	spin.StartAndWait()
-	time.Sleep(5 * time.Second)
-	spin.StopAndWait()
+	spin.StartAndWait()*/
+	time.Sleep(15 * time.Second)
+	//spin.StopAndWait()
 
 	for {
 		m.Mutex.Lock()
@@ -75,7 +75,7 @@ func (m *Manager) dispatchJobs() {
 func (m *Manager) glueBoard() {
 	toFill := m.Game.X * m.Game.Y
 	filled := 0
-	newBoard := make([]byte, (m.Game.X + 2)*(m.Game.Y + 2))
+	newBoard := make([]byte, (m.Game.X+2)*(m.Game.Y+2))
 
 	for data := range m.GlueChannel {
 		split := strings.Split(data, "|")
@@ -84,15 +84,15 @@ func (m *Manager) glueBoard() {
 			os.Exit(127)
 		}
 
-		partY1,_ := strconv.Atoi(split[0])
-		partY2,_ := strconv.Atoi(split[1])
+		partY1, _ := strconv.Atoi(split[0])
+		partY2, _ := strconv.Atoi(split[1])
 		filled += (partY2 - partY1) * m.Game.X
 		byteData := []byte(split[2])
 		iterator := 0
 
 		for i := partY1; i < partY2; i++ {
-			for j := 1; j < m.Game.X + 1; j++ {
-				newBoard[(i + 1) * (m.Game.X + 2) + j] = byteData[iterator]
+			for j := 1; j < m.Game.X+1; j++ {
+				newBoard[(i+1)*(m.Game.X+2)+j] = byteData[iterator]
 				iterator++
 			}
 		}
@@ -101,7 +101,7 @@ func (m *Manager) glueBoard() {
 			m.Mutex.Lock()
 			m.Game.Board = newBoard
 			m.Mutex.Unlock()
-			newBoard = make([]byte, (m.Game.X + 2)*(m.Game.Y + 2))
+			newBoard = make([]byte, (m.Game.X+2)*(m.Game.Y+2))
 			filled = 0
 			m.Next <- true
 		}

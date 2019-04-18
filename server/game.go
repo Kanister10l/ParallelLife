@@ -51,12 +51,12 @@ func (g *Game) PrepareStrings(n int) []string {
 	div := g.Y / n
 	for i := 0; i < n; i++ {
 		if i < n-1 {
-			toSend := fmt.Sprintf("%d|%d|%d|%d|", g.X + 2, div + 2, i * div, (i + 1) * div)
-			toSend += string(g.Board[i * div : (i + 1) * (div + 2) + g.X + 2])
+			toSend := fmt.Sprintf("%d|%d|%d|%d|", g.X+2, div+2, i*div, (i+1)*div)
+			toSend += string(g.Board[i*div*(g.X+2) : (i+1)*(div+2)*(g.X+2)+g.X+2])
 			ret = append(ret, toSend)
 		} else {
-			toSend := fmt.Sprintf("%d|%d|%d|%d|", g.X + 2, g.Y - (i * div) + 2, i * div, g.Y)
-			toSend += string(g.Board[i * div :])
+			toSend := fmt.Sprintf("%d|%d|%d|%d|", g.X+2, g.Y-(i*div)+2, i*div, g.Y)
+			toSend += string(g.Board[i*div*(g.X+2):])
 			ret = append(ret, toSend)
 		}
 	}
