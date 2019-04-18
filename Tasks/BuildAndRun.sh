@@ -1,7 +1,7 @@
 #!/bin/bash
 if go build; then
     echo "Build Successful"
-    ./ParallelLife -ll=debug
+    ./ParallelLife -ll=clean
 else
     echo "Build Error"
 fi

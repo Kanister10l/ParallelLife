@@ -1,2 +1,2 @@
 #!/bin/bash
-./ParallelLife -ll=debug
+./ParallelLife -ll=clean
