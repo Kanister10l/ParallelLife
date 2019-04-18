@@ -1,8 +1,8 @@
 package main
 
 import (
-	"io/ioutil"
 	"flag"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -19,6 +19,9 @@ func main() {
 		log.SetFlags(0)
 		log.SetOutput(ioutil.Discard)
 	}
+
+	game := server.NewGame(100, 100, 0.1)
+	server.NewManager(game)
 
 	mux := bone.New()
 

@@ -10,7 +10,7 @@ import (
 //ConnectWorker handler for connecting and dispatching job for workers
 func ConnectWorker() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		conn, err := websocket.Upgrade(w, r, w.Header(), 1024, 1024)
+		conn, err := websocket.Upgrade(w, r, w.Header(), 10240, 10240)
 		if err != nil {
 			log.Println("Error upgrading request to websocket from", r.RemoteAddr, "\nError:", err)
 			return
