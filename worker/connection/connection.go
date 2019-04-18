@@ -20,11 +20,15 @@ func ConnectToServer() {
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		log.Fatal("Error dialing server:", err)
+		log.Println("Error dialing server:", err)
+		return
 	}
 	defer c.Close()
+	defer log.Println("Closing")
 
 	done := make(chan struct{})
+
+	forwardBoard := make(chan Board)
 
 	go func() {
 		defer close(done)
@@ -34,24 +38,36 @@ func ConnectToServer() {
 				log.Println("Error trying to read from server:", err)
 				return
 			}
-			log.Printf("Recived message from server: %s", message)
+
+			log.Println("New task from server")
+
+			board := LoadBoard(string(message))
+
+			forwardBoard <- board
 		}
 	}()
 
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
+	err = c.WriteMessage(websocket.TextMessage, []byte("Ready"))
+	if err != nil {
+		log.Println("Error writing message to server:", err)
+		return
+	}
 
 	for {
 		select {
 		case <-done:
 			return
-		case t := <-ticker.C:
-			err := c.WriteMessage(websocket.TextMessage, []byte(t.String()))
+		case t := <-forwardBoard:
+			toSend := t.PrepareRetString()
+
+			err := c.WriteMessage(websocket.TextMessage, []byte(toSend))
 			if err != nil {
 				log.Println("Error writing message to server:", err)
 				return
 			}
+
 		case <-interrupt:
+			defer os.Exit(0)
 			log.Println("Closing connection to server")
 			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
