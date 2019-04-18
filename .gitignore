@@ -5,6 +5,7 @@
 *.so
 *.dylib
 ParallelLife
+worker/worker
 
 # Test binary, build with `go test -c`
 *.test
