@@ -1,2 +1,2 @@
 #!/bin/bash
-./ParallelLife
+./ParallelLife -ll=debug

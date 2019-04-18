@@ -23,6 +23,27 @@
             "command": "./Tasks/Run.sh",
             "group": "build",
             "problemMatcher": []
+        },
+        {
+            "label": "Build Worker",
+            "type": "shell",
+            "command": "./Tasks/BuildWorker.sh",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Build and Run Worker",
+            "type": "shell",
+            "command": "./Tasks/BuildAndRunWorker.sh",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Worker",
+            "type": "shell",
+            "command": "./Tasks/RunWorker.sh",
+            "group": "build",
+            "problemMatcher": []
         }
     ]
 }

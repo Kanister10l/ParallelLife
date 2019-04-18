@@ -1,7 +1,8 @@
 #!/bin/bash
+cd worker
 if go build; then
     echo "Build Successful"
-    ./ParallelLife -ll=debug
+    ./worker
 else
     echo "Build Error"
 fi
