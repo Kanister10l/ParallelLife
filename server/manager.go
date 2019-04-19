@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/kanister10l/ParallelLife/spinner"
 )
 
 type Manager struct {
@@ -16,6 +18,8 @@ type Manager struct {
 	Mutex            sync.Mutex
 	GlueChannel      chan string
 	Next             chan bool
+	Gif              chan gifBoard
+	Generations      int
 }
 
 type Worker struct {
@@ -24,16 +28,19 @@ type Worker struct {
 	Close      chan bool
 }
 
-func NewManager(game *Game) *Manager {
+func NewManager(game *Game, gens, gifScale, gifDelay int, gifFile string) *Manager {
 	manager := &Manager{}
 	manager.Game = game
 	manager.Workers = []Worker{}
 	manager.NewWorkerChannel = make(chan Worker, 100)
 	manager.GlueChannel = make(chan string, 100)
 	manager.Next = make(chan bool)
+	manager.Gif = make(chan gifBoard, gens)
+	manager.Generations = gens
 	go manager.listenForNewWorker()
 	go manager.dispatchJobs()
 	go manager.glueBoard()
+	go CreateGif(gifFile, game.X, game.Y, gifScale, gifDelay, manager.Gif)
 
 	return manager
 }
@@ -42,17 +49,20 @@ func (m *Manager) listenForNewWorker() {
 	for w := range m.NewWorkerChannel {
 		m.Mutex.Lock()
 		m.Workers = append(m.Workers, w)
-		//TODO: Remove worker on close message
 		m.Mutex.Unlock()
 	}
 }
 
 func (m *Manager) dispatchJobs() {
-	/*spin := spinner.Spinner{}
+	spin := spinner.Spinner{}
 	spin.Init("Worker warmup", 70, spinner.Circle1())
-	spin.StartAndWait()*/
-	time.Sleep(15 * time.Second)
-	//spin.StopAndWait()
+	spin.StartAndWait()
+	time.Sleep(2 * time.Second)
+	spin.StopAndWait()
+
+	spin = spinner.Spinner{}
+	spin.Init("Simulating", 70, spinner.Circle1())
+	spin.StartAndWait()
 
 	for {
 		m.Mutex.Lock()
@@ -68,11 +78,21 @@ func (m *Manager) dispatchJobs() {
 		}
 		m.Mutex.Unlock()
 
-		<-m.Next
+		_, ok := <-m.Next
+		if !ok {
+			for k := range m.Workers {
+				close(m.Workers[k].OutChannel)
+			}
+			time.Sleep(400 * time.Millisecond)
+			spin.StopAndWait()
+			os.Exit(0)
+			return
+		}
 	}
 }
 
 func (m *Manager) glueBoard() {
+	ready := 0
 	toFill := m.Game.X * m.Game.Y
 	filled := 0
 	newBoard := make([]byte, (m.Game.X+2)*(m.Game.Y+2))
@@ -99,8 +119,16 @@ func (m *Manager) glueBoard() {
 
 		if toFill == filled {
 			m.Mutex.Lock()
+			m.Gif <- gifBoard{Data: m.Game.Board, X: m.Game.X, Y: m.Game.Y}
 			m.Game.Board = newBoard
 			m.Mutex.Unlock()
+			ready++
+			if ready == m.Generations {
+				m.Gif <- gifBoard{Data: m.Game.Board, X: m.Game.X, Y: m.Game.Y}
+				close(m.Gif)
+				close(m.Next)
+				return
+			}
 			newBoard = make([]byte, (m.Game.X+2)*(m.Game.Y+2))
 			filled = 0
 			m.Next <- true

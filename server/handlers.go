@@ -36,7 +36,10 @@ func ConnectWorker(manager *Manager) http.HandlerFunc {
 		log.Println("Ready message received")
 
 		for {
-			toSend := <-outlet
+			toSend, ok := <-outlet
+			if !ok {
+				return
+			}
 			err = conn.WriteMessage(mt, []byte(toSend))
 			if err != nil {
 				log.Println("Error writing message to worker:", err)
