@@ -1,26 +1,19 @@
 package connection
 
 import (
+	"fmt"
 	"log"
 	"net/url"
-	"os"
-	"os/signal"
-	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 //ConnectToServer connect to server and handle communication
-func ConnectToServer() {
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-
-	u := url.URL{Scheme: "ws", Host: "127.0.0.1:8080", Path: "/register"}
-	log.Printf("Connecting to %s", u.String())
+func ConnectToServer(ip, port string) {
+	u := url.URL{Scheme: "ws", Host: fmt.Sprintf("%s:%s", ip, port), Path: "/register"}
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		log.Println("Error dialing server:", err)
 		return
 	}
 	defer c.Close()
@@ -28,22 +21,22 @@ func ConnectToServer() {
 
 	done := make(chan struct{})
 
-	forwardBoard := make(chan Board)
+	forwardBoard := make(chan *Board)
 
 	go func() {
 		defer close(done)
 		for {
 			_, message, err := c.ReadMessage()
 			if err != nil {
-				log.Println("Error trying to read from server:", err)
 				return
 			}
 
 			log.Println("New task from server")
 
 			board := LoadBoard(string(message))
+			board.calculateNextBoard()
 
-			forwardBoard <- board
+			forwardBoard <- &board
 		}
 	}()
 
@@ -65,20 +58,6 @@ func ConnectToServer() {
 				log.Println("Error writing message to server:", err)
 				return
 			}
-
-		case <-interrupt:
-			defer os.Exit(0)
-			log.Println("Closing connection to server")
-			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			if err != nil {
-				log.Println("Error writing close message to server:", err)
-				return
-			}
-			select {
-			case <-done:
-			case <-time.After(time.Second):
-			}
-			return
 		}
 	}
 }
