@@ -13,3 +13,4 @@ worker/worker
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 *.gif
+.VSCodeCounter
