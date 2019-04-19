@@ -9,6 +9,7 @@ import (
 	"sync"
 )
 
+//Board struct containing data about current state of board
 type Board struct {
 	Data     []byte
 	nextStep []byte
@@ -19,6 +20,7 @@ type Board struct {
 	Mutex    sync.Mutex
 }
 
+//LoadBoard parse data string into Board Struct
 func LoadBoard(data string) Board {
 	split := strings.Split(data, "|")
 	if len(split) < 5 {
@@ -44,6 +46,7 @@ func LoadBoard(data string) Board {
 	return board
 }
 
+//PrepareRetString crates data string based on Board Struct
 func (b *Board) PrepareRetString() string {
 
 	toSend := fmt.Sprintf("%d|%d|", b.Ret1, b.Ret2)
@@ -136,7 +139,7 @@ func (b *Board) calculateNextBoard() {
 	}
 
 	for i := 1; i < b.Y-1; i++ {
-		<- end
+		<-end
 	}
 
 	b.Data = b.nextStep

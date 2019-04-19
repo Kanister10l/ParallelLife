@@ -11,6 +11,7 @@ import (
 	"github.com/kanister10l/ParallelLife/spinner"
 )
 
+//Manager base type required for game manager to work
 type Manager struct {
 	Game             *Game
 	Workers          []Worker
@@ -22,12 +23,14 @@ type Manager struct {
 	Generations      int
 }
 
+//Worker contains channel for communication with connected worker
 type Worker struct {
 	InChannel  chan string
 	OutChannel chan string
 	Close      chan bool
 }
 
+//NewManager creates new game manager
 func NewManager(game *Game, gens, gifScale, gifDelay int, gifFile string) *Manager {
 	manager := &Manager{}
 	manager.Game = game
