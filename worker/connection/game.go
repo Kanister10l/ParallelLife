@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 //Board struct containing data about current state of board
@@ -17,7 +16,6 @@ type Board struct {
 	Y        int
 	Ret1     int
 	Ret2     int
-	Mutex    sync.Mutex
 }
 
 //LoadBoard parse data string into Board Struct
@@ -35,12 +33,11 @@ func LoadBoard(data string) Board {
 	boardData := []byte(split[4])
 
 	board := Board{
-		X:     x,
-		Y:     y,
-		Ret1:  ret1,
-		Ret2:  ret2,
-		Data:  boardData,
-		Mutex: sync.Mutex{},
+		X:    x,
+		Y:    y,
+		Ret1: ret1,
+		Ret2: ret2,
+		Data: boardData,
 	}
 
 	return board
@@ -69,68 +66,32 @@ func (b *Board) calculateNextBoard() {
 		go func(endChannel chan bool, b *Board, i int) {
 			for j := 1; j < b.X-1; j++ {
 				if b.Data[i*b.X+j] == 0 {
-					ln := 0
-					if b.Data[(i+1)*b.X+j+1] == 1 {
-						ln++
-					}
-					if b.Data[(i+1)*b.X+j] == 1 {
-						ln++
-					}
-					if b.Data[(i+1)*b.X+j-1] == 1 {
-						ln++
-					}
-					if b.Data[(i-1)*b.X+j+1] == 1 {
-						ln++
-					}
-					if b.Data[(i-1)*b.X+j] == 1 {
-						ln++
-					}
-					if b.Data[(i-1)*b.X+j-1] == 1 {
-						ln++
-					}
-					if b.Data[i*b.X+j+1] == 1 {
-						ln++
-					}
-					if b.Data[i*b.X+j-1] == 1 {
-						ln++
-					}
+					ln := byte(0)
+					ln += b.Data[(i+1)*b.X+j+1]
+					ln += b.Data[(i+1)*b.X+j]
+					ln += b.Data[(i+1)*b.X+j-1]
+					ln += b.Data[(i-1)*b.X+j+1]
+					ln += b.Data[(i-1)*b.X+j]
+					ln += b.Data[(i-1)*b.X+j-1]
+					ln += b.Data[i*b.X+j+1]
+					ln += b.Data[i*b.X+j-1]
 
 					if ln == 3 {
-						b.Mutex.Lock()
 						b.nextStep[i*b.X+j] = 1
-						b.Mutex.Unlock()
 					}
 				} else {
-					ln := 0
-					if b.Data[(i+1)*b.X+j+1] == 1 {
-						ln++
-					}
-					if b.Data[(i+1)*b.X+j] == 1 {
-						ln++
-					}
-					if b.Data[(i+1)*b.X+j-1] == 1 {
-						ln++
-					}
-					if b.Data[(i-1)*b.X+j+1] == 1 {
-						ln++
-					}
-					if b.Data[(i-1)*b.X+j] == 1 {
-						ln++
-					}
-					if b.Data[(i-1)*b.X+j-1] == 1 {
-						ln++
-					}
-					if b.Data[i*b.X+j+1] == 1 {
-						ln++
-					}
-					if b.Data[i*b.X+j-1] == 1 {
-						ln++
-					}
+					ln := byte(0)
+					ln += b.Data[(i+1)*b.X+j+1]
+					ln += b.Data[(i+1)*b.X+j]
+					ln += b.Data[(i+1)*b.X+j-1]
+					ln += b.Data[(i-1)*b.X+j+1]
+					ln += b.Data[(i-1)*b.X+j]
+					ln += b.Data[(i-1)*b.X+j-1]
+					ln += b.Data[i*b.X+j+1]
+					ln += b.Data[i*b.X+j-1]
 
 					if ln == 2 || ln == 3 {
-						b.Mutex.Lock()
 						b.nextStep[i*b.X+j] = 1
-						b.Mutex.Unlock()
 					}
 				}
 			}
